@@ -1,0 +1,7 @@
+{
+  "appTitle": "fog_bike",
+  "@appTitle": {
+    "description": "Bike the fog!"
+  },
+  "settings": "Settings"
+}
