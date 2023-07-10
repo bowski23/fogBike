@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import classes.Coordinate;
 import io.flutter.plugin.common.MethodCall;
 import kotlin.random.Random;
 
@@ -23,7 +24,7 @@ public class ZmqService {
 	private static final String SERVER_ADDRESS = "tcp://34.142.26.27:8080";
 	private static final long RETRY_INITIAL_DELAY_MS = 100;
 	private static final long RETRY_RANDOM_RANGE_MS = 20;
-	private static final long SCHEDULE = 16;
+	private static final long SCHEDULE = 200;
 	private static final int MAX_RETRY_COUNT = 7;
 
 	private static final String TAG = "ZmqService";
@@ -148,13 +149,13 @@ public class ZmqService {
 		}
 	}
 	private void runMainLoop(){
-		while (isConnected) {
+		Log.i(TAG, "Running main Loop");
+		while (true) {
 			if (!coordinates.isEmpty()) {
 				Log.i( TAG,"Trying to send Location...");
 				ZMsg request = new ZMsg();
-
 				Coordinate top = coordinates.peek();
-
+				request.add(top.toBytes());
 
 				boolean isMessageSent = false;
 				int sendRetries = 0;
@@ -171,9 +172,22 @@ public class ZmqService {
 				ZMsg response = ZMsg.recvMsg(socket);
 				if (response != null) {
 					Log.i( TAG,"Coordinate sent!");
-					Log.i( TAG,"Got response" + response.toString());
 					String type = response.removeFirst().getString(Charset.defaultCharset());
-					Coordinate.Type dangerLevel = Coordinate.Type.valueOf(type);
+					Log.i( TAG,"Got response" + type);
+					Coordinate.Type dangerLevel;
+					switch (type.toUpperCase()){
+						case "HIGH":
+							dangerLevel = Coordinate.Type.HIGH;
+							break;
+						case "MEDIUM":
+							dangerLevel = Coordinate.Type.MEDIUM;
+							break;
+						case "LOW":
+							dangerLevel = Coordinate.Type.LOW;
+							break;
+						default:
+							dangerLevel = Coordinate.Type.SMOOTH;
+					}
 					Coordinate coordinate = coordinates.remove();
 					retryCount = 0;
 					//we only need to notify the frontend if there is danger or traffic

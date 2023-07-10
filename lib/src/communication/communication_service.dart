@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as dev;
-import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:fog_bike/src/sensors/sensor_service.dart';
 import 'package:location/location.dart';
@@ -26,12 +26,12 @@ class CommunicationService {
     Timer(const Duration(seconds: 1), SensorService().init);
   }
 
-  //to-do: decide wether position should be sent back to the ui or not
   Future<dynamic> onMethodCall(MethodCall call) async{
     switch (call.method) {
       case "onResponse":
-        dynamic response = call.arguments;
-        var loc = LocationEvent(LocationData(latitude: response.latitude, longitude: response.longitude), DangerLevel.fromNumeric(response.level));
+        Map<String,dynamic> response;
+        response = const JsonDecoder().convert(call.arguments as String);
+        var loc = LocationEvent(LocationData(latitude: response["latitude"], longitude: response["longitude"]), DangerLevel.fromNumeric(response["level"]));
         dev.log("dart response: $loc");
         _locationEventController.add(loc);
         break;

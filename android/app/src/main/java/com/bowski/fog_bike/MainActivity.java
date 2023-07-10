@@ -6,17 +6,13 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import classes.Coordinate;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugins.GeneratedPluginRegistrant;
-
-import org.zeromq.SocketType;
-import org.zeromq.ZMQ;
-import org.zeromq.ZContext;
-import org.zeromq.ZSocket;
 
 public class MainActivity extends FlutterActivity {
 
@@ -96,8 +92,8 @@ public class MainActivity extends FlutterActivity {
         }
         return "{"+
                 "\"latitude\":" + coordinate.getLatitude() +
-                "\"longitude\":" + coordinate.getLongitude() +
-                "\"level\":" + lvl + "}";
+                ", \"longitude\":" + coordinate.getLongitude() +
+                ", \"level\":" + lvl + "}";
 
     }
     public void messageFlutter(Coordinate coordinate){

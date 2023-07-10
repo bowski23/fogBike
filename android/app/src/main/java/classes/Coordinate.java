@@ -1,4 +1,4 @@
-package com.bowski.fog_bike;
+package classes;
 
 import android.util.Log;
 

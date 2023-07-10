@@ -17,7 +17,7 @@ void main() async {
 
   setLocationSettings(askForGooglePlayServices: true, askForPermission: true, useGooglePlayServices: true, askForGPS: true, smallestDisplacement: 2);
 
-  Timer(Duration(seconds: 5), () => CommunicationService().init());
+  Timer(const Duration(seconds: 1), () => CommunicationService().init());
 
   runApp(MyApp(settingsController: settingsController));
 }
