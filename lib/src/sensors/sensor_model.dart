@@ -1,6 +1,7 @@
 
 import 'dart:math';
 
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -11,16 +12,17 @@ import 'package:sensors_plus/sensors_plus.dart';
   //a low-pass filtered version of acceleration could determine massive prolonged acceleration/deceleration which is not detected by the thresholds
   //these prolonged events would be a good indicator for normal braking or riding downhill. speed could also be used for this purpose  
 enum DangerLevel{
-  none(0.0, 0.0, 0),
-  low(45, 2.5, 1),
-  medium(60, 3.0, 2),
-  high(75, 3.5, 3);
+  none(0.0, 0.0, 0, BitmapDescriptor.hueBlue),
+  low(45, 2.5, 1, BitmapDescriptor.hueYellow),
+  medium(60, 3.0, 2, BitmapDescriptor.hueOrange),
+  high(75, 3.5, 3, BitmapDescriptor.hueRed);
 
-  const DangerLevel(this.lowerBoundAcc, this.lowerBoundGyro, this.numeric);
+  const DangerLevel(this.lowerBoundAcc, this.lowerBoundGyro, this.numeric, this.iconHue);
 
   final double lowerBoundAcc;
   final double lowerBoundGyro;
   final int numeric;
+  final double iconHue;
 
   static DangerLevel fromNumeric(int numeric) {
     switch (numeric) {
@@ -94,4 +96,9 @@ class LocationEvent {
   double get longitude => locationData.longitude!;
   int get level => dangerLevel.numeric;
 
+  @override
+  String toString() {
+    
+    return "LocationEvent: lat: $latitude, long: $longitude, level: $level";
+  }
 }

@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'dart:developer';
+import 'dart:developer' as dev;
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:fog_bike/src/sensors/sensor_service.dart';
+import 'package:location/location.dart';
 
 import '../sensors/sensor_model.dart';
 
@@ -14,8 +16,11 @@ class CommunicationService {
 
   CommunicationService._();
 
+  final StreamController<LocationEvent> _locationEventController = StreamController<LocationEvent>();
+  Stream<LocationEvent> get locationEvent => _locationEventController.stream;
+
   void init() async {
-    log("init communication service");
+    dev.log("init communication service");
     platform.setMethodCallHandler(onMethodCall);
     platform.invokeMethod<void>('initZmq');
     Timer(const Duration(seconds: 1), SensorService().init);
@@ -25,13 +30,13 @@ class CommunicationService {
   Future<dynamic> onMethodCall(MethodCall call) async{
     switch (call.method) {
       case "onResponse":
-        int level = call.arguments;
-        DangerLevel dangerLevel = DangerLevel.fromNumeric(level);
-        log("dart response: ${dangerLevel.name}");
-
+        dynamic response = call.arguments;
+        var loc = LocationEvent(LocationData(latitude: response.latitude, longitude: response.longitude), DangerLevel.fromNumeric(response.level));
+        dev.log("dart response: $loc");
+        _locationEventController.add(loc);
         break;
       default:
-        log("Unknown method ${call.method}");
+        dev.log("Unknown method ${call.method}");
     }
   }
 

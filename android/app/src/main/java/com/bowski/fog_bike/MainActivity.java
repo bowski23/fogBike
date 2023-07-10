@@ -59,10 +59,20 @@ public class MainActivity extends FlutterActivity {
                 double lon = call.argument("longitude");
                 int lvl = call.argument("level");
                 Log.i("JavaActivity", "onMethodCall: queueMsg: " + lat + " " + lon + " " + lvl);
-                break;
-            case "pollResponse":
-                Log.i("JavaActivity", "onMethodCall: pollResponse");
-                result.success(counter);
+                Coordinate.Type type;
+                switch (lvl){
+                    case 1:
+                        type = Coordinate.Type.LOW;
+                    case 2:
+                        type = Coordinate.Type.MEDIUM;
+                    case 3:
+                        type = Coordinate.Type.HIGH;
+                    default:
+                        type = Coordinate.Type.SMOOTH;
+                }
+
+                ZmqService.getInstance().addCoordinate(
+                        new Coordinate(lat,lon,type));
                 break;
             default:
                 result.notImplemented();
@@ -70,31 +80,30 @@ public class MainActivity extends FlutterActivity {
     }
 
     public void runZmq(){
-        try {
-            ZContext context = new ZContext();
-            ZSocket socket = new ZSocket(SocketType.REQ);
-            socket.connect("tcp://192.168.178.20:8080");
-            while (true) {
-                Thread.sleep(200);
-                Log.i("JavaActivity", "Zmq - sending msg nr." + counter);
-                socket.sendStringUtf8("Hello Nr. " + counter + "!");
-                counter++;
-                String str = socket.receiveStringUtf8();
-                Log.i("JavaActivity", "Zmq - received:" + str);
-                messageFlutter();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        ZmqService instance = ZmqService.getInstance();
+        instance.setFlutterHandler(this::messageFlutter);
+        instance.startSocket();
     }
 
-    public void messageFlutter(){
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("JavaActivity", "messaging Flutter");
-                channel.invokeMethod("onResponse",counter);
-            }
+    private static String toIntermediaryString(Coordinate coordinate){
+        int lvl;
+        switch (coordinate.getType()){
+            case SMOOTH:
+            case TRAFFIC:
+                lvl = 0;
+            default:
+                lvl = coordinate.getType().ordinal();
+        }
+        return "{"+
+                "\"latitude\":" + coordinate.getLatitude() +
+                "\"longitude\":" + coordinate.getLongitude() +
+                "\"level\":" + lvl + "}";
+
+    }
+    public void messageFlutter(Coordinate coordinate){
+        new Handler(Looper.getMainLooper()).post(() -> {
+            Log.d("JavaActivity", "messaging Flutter");
+            channel.invokeMethod("onResponse", toIntermediaryString(coordinate));
         });
     }
 }

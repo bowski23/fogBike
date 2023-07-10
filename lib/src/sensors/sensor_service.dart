@@ -56,9 +56,9 @@ class SensorService {
       return;
     }
 
+    //we could also group prolonged danger events together and bump them up to a higher level
     DangerLevel dangerLevel = _dangerQueue.isNotEmpty ? _dangerQueue.reduce((value, element) => max(value,element)) : DangerLevel.none;
     _dangerQueue.clear();
-
     var locationEvent = LocationEvent(event, dangerLevel);
     CommunicationService().sendLocationEvent(locationEvent);
   }
