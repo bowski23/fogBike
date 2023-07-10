@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/services.dart';
+import 'package:fog_bike/src/sensors/sensor_service.dart';
+
+import '../sensors/sensor_model.dart';
 
 //Singelton class for communication with the server
 class CommunicationService {
@@ -15,22 +18,28 @@ class CommunicationService {
     log("init communication service");
     platform.setMethodCallHandler(onMethodCall);
     platform.invokeMethod<void>('initZmq');
-    Timer.periodic(const Duration(milliseconds: 500), (timer) => _poll());
+    Timer(const Duration(seconds: 1), SensorService().init);
   }
 
+  //to-do: decide wether position should be sent back to the ui or not
   Future<dynamic> onMethodCall(MethodCall call) async{
     switch (call.method) {
       case "onResponse":
-        log("dart method invoked: ${call.arguments}");
+        int level = call.arguments;
+        DangerLevel dangerLevel = DangerLevel.fromNumeric(level);
+        log("dart response: ${dangerLevel.name}");
+
         break;
       default:
         log("Unknown method ${call.method}");
     }
   }
 
-  void _poll() async{
-    int counter = await platform.invokeMethod<int>('pollResponse') ?? -1;
-    log("polled: $counter");
+  void sendLocationEvent(LocationEvent event){
+    platform.invokeMethod<void>('queueMsg', <String, dynamic>{
+      'latitude':event.latitude,
+      'longitude': event.longitude,
+      'level': event.level
+    });
   }
-
 }

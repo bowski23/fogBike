@@ -2,7 +2,7 @@
 # See https://dart.dev/tools/pub/glossary#lockfile
 packages:
   async:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: async
       sha256: "947bfcf187f74dbc5e146c9eb9c0f10c9f8b30743e341481c1e2ed3ecc18c20c"
@@ -49,14 +49,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  dartzmq:
-    dependency: "direct main"
-    description:
-      name: dartzmq
-      sha256: "9a93bc65f233e7b33eb63f58f9fd901642980eb025c43caa0aa5caf959c8533e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0-dev.15"
   fake_async:
     dependency: transitive
     description:

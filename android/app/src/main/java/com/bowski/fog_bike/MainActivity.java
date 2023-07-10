@@ -55,6 +55,10 @@ public class MainActivity extends FlutterActivity {
                 }
                 break;
             case "queueMsg":
+                double lat = call.argument("latitude");
+                double lon = call.argument("longitude");
+                int lvl = call.argument("level");
+                Log.i("JavaActivity", "onMethodCall: queueMsg: " + lat + " " + lon + " " + lvl);
                 break;
             case "pollResponse":
                 Log.i("JavaActivity", "onMethodCall: pollResponse");
