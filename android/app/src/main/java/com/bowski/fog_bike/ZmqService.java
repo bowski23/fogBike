@@ -6,12 +6,15 @@ import androidx.annotation.NonNull;
 
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMonitor;
 import org.zeromq.ZMsg;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import classes.Coordinate;
@@ -21,7 +24,7 @@ import kotlin.random.Random;
 public class ZmqService {
 	private static final int RECV_TIMEOUT = 500;
 	private static final int SEND_TIMEOUT = 200;
-	private static final String SERVER_ADDRESS = "tcp://192.168.1.151:8080";
+	private static final String SERVER_ADDRESS = "tcp://34.142.26.27:8080";
 	private static final long RETRY_INITIAL_DELAY_MS = 100;
 	private static final long RETRY_RANDOM_RANGE_MS = 20;
 	private static final long SCHEDULE = 200;
@@ -66,9 +69,9 @@ public class ZmqService {
 		 * Handles the propagation of the Coordinate Response to Flutter.
 		 *
 		 *
-		 * @param coordinate A {@link MethodCall}.
+		 * @param coordinates An array of {@link Coordinate}s.
 		 */
-		void messageFlutter(@NonNull Coordinate coordinate);
+		void messageFlutter(@NonNull Coordinate[] coordinates);
 	}
 
 	private CoordinateResponseHandler flutterHandler;
@@ -182,30 +185,22 @@ public class ZmqService {
 				ZMsg response = ZMsg.recvMsg(socket);
 				if (response != null) {
 					Log.i( TAG,"Coordinate sent!");
-					String type = response.removeFirst().getString(Charset.defaultCharset());
-					Log.i( TAG,"Got response " + type);
-					Coordinate.Type dangerLevel;
-					switch (type.toUpperCase()){
-						case "HIGH":
-							dangerLevel = Coordinate.Type.HIGH;
-							break;
-						case "MEDIUM":
-							dangerLevel = Coordinate.Type.MEDIUM;
-							break;
-						case "LOW":
-							dangerLevel = Coordinate.Type.LOW;
-							break;
-						default:
-							dangerLevel = Coordinate.Type.SMOOTH;
+					ArrayList<Coordinate> responseCoordinates = new ArrayList<Coordinate>();
+					for(ZFrame frame : response){
+						Coordinate coordinate = Coordinate.fromBytes(frame.getData());
+						//we only need to notify the frontend if there is danger
+						if(coordinate.getType() != Coordinate.Type.SMOOTH){
+							responseCoordinates.add(coordinate);
+						}
 					}
-					Coordinate coordinate = coordinates.remove();
+					Log.i( TAG,"Got response with " + responseCoordinates.size() + " coordinates!");
+					coordinates.remove();
 					retryCount = 0;
-					//we only need to notify the frontend if there is danger or traffic
-					if(dangerLevel != Coordinate.Type.SMOOTH){
-						Log.i(TAG, "Event is dangerous, notifying Flutter");
-						coordinate.setType(dangerLevel);
-						flutterHandler.messageFlutter(coordinate);
-					}
+
+					// we don't need to send nothing
+					if(responseCoordinates.size() > 0)
+						flutterHandler.messageFlutter(responseCoordinates.toArray(new Coordinate[0]));
+
 
 				} else if (response == null) {
 					Log.d(TAG, "No response, resending, retry nr." + retryCount);

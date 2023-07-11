@@ -25,7 +25,7 @@ class BikeMapView extends StatefulWidget {
 }
 
 class _BikeMapViewState extends State<BikeMapView> {
-  StreamSubscription<LocationEvent>? _eventSubscription;
+  StreamSubscription<List<LocationEvent>>? _eventSubscription;
 
   _BikeMapViewState(){
     _eventSubscription = CommunicationService().locationEvent.listen(_onLocationEvent);
@@ -43,18 +43,25 @@ class _BikeMapViewState extends State<BikeMapView> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
-  final Set<Marker> _markers = {};
+  Set<Marker> _markers = {};
 
   void _onLocationUpdate(GoogleMapController controller, LocationData? loc){
     if(loc == null) return;
     controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(loc.latitude!, loc.longitude!),bearing: loc.bearing!, zoom: 18)));
   }
 
-  int _markerCount = 0;
 
-  void _onLocationEvent(LocationEvent event){
-    _markers.add(Marker(markerId: MarkerId("loc_$_markerCount"), position: LatLng(event.latitude, event.longitude), icon: BitmapDescriptor.defaultMarkerWithHue(event.dangerLevel.iconHue)));
-    _markerCount++;
+  void _onLocationEvent(List<LocationEvent> event){
+    int _markerCount = 0;
+    _markers = {};
+    for(var elem in event){
+    _markers.add(Marker(
+          markerId: MarkerId("loc_$_markerCount"),
+          position: LatLng(elem.latitude, elem.longitude),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(elem.dangerLevel.iconHue)));
+      _markerCount++;
+    } 
     setState(() {
       
     });

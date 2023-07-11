@@ -84,12 +84,26 @@ public class MainActivity extends FlutterActivity {
                 "\"latitude\":" + coordinate.getLatitude() +
                 ", \"longitude\":" + coordinate.getLongitude() +
                 ", \"level\":" + lvl + "}";
-
     }
-    public void messageFlutter(Coordinate coordinate){
+
+    private static String toJsonArray(Coordinate[] coordinates){
+        String json = "{\"coordinates\": [";
+        boolean isFirst = true;
+        for(Coordinate coordinate : coordinates){
+            if(isFirst) {
+                isFirst = false;
+            } else {
+                json += ", ";
+            }
+            json += toIntermediaryString(coordinate);
+        }
+        json += "]}";
+        return json;
+    }
+    public void messageFlutter(Coordinate[] coordinates){
         new Handler(Looper.getMainLooper()).post(() -> {
             Log.d("JavaActivity", "messaging Flutter");
-            channel.invokeMethod("onResponse", toIntermediaryString(coordinate));
+            channel.invokeMethod("onResponse", toJsonArray(coordinates));
         });
     }
 }

@@ -16,8 +16,8 @@ class CommunicationService {
 
   CommunicationService._();
 
-  final StreamController<LocationEvent> _locationEventController = StreamController<LocationEvent>();
-  Stream<LocationEvent> get locationEvent => _locationEventController.stream;
+  final StreamController<List<LocationEvent>> _locationEventController = StreamController<List<LocationEvent>>();
+  Stream<List<LocationEvent>> get locationEvent => _locationEventController.stream;
 
   bool isSendingMessages = false;
 
@@ -33,9 +33,14 @@ class CommunicationService {
       case "onResponse":
         Map<String,dynamic> response;
         response = const JsonDecoder().convert(call.arguments as String);
-        var loc = LocationEvent(LocationData(latitude: response["latitude"], longitude: response["longitude"]), DangerLevel.fromNumeric(response["level"]));
-        dev.log("dart response: $loc");
-        _locationEventController.add(loc);
+        List<dynamic> list = response["coordinates"];
+        List<LocationEvent> locs = [];
+        for(var elem in list){
+          var loc = LocationEvent(LocationData(latitude: elem["latitude"], longitude: elem["longitude"]), DangerLevel.fromNumeric(elem["level"]));
+          locs.add(loc);
+        }
+        dev.log("dart response: $locs");
+        _locationEventController.add(locs);
         break;
       default:
         dev.log("Unknown method ${call.method}");
