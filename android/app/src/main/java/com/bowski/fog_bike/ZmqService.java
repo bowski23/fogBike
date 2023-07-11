@@ -21,11 +21,11 @@ import kotlin.random.Random;
 public class ZmqService {
 	private static final int RECV_TIMEOUT = 500;
 	private static final int SEND_TIMEOUT = 200;
-	private static final String SERVER_ADDRESS = "tcp://34.142.26.27:8080";
+	private static final String SERVER_ADDRESS = "tcp://192.168.1.151:8080";
 	private static final long RETRY_INITIAL_DELAY_MS = 100;
 	private static final long RETRY_RANDOM_RANGE_MS = 20;
 	private static final long SCHEDULE = 200;
-	private static final int MAX_RETRY_COUNT = 7;
+	private static final int MAX_RETRY_COUNT = 10;
 
 	private static final String TAG = "ZmqService";
 
@@ -57,6 +57,7 @@ public class ZmqService {
 	}
 
 	public synchronized void addCoordinate(Coordinate event) {
+		Log.i(TAG, "Added coordinate to queue");
 		coordinates.add(event);
 	}
 
@@ -73,6 +74,7 @@ public class ZmqService {
 	private CoordinateResponseHandler flutterHandler;
 
 	public synchronized void setFlutterHandler(CoordinateResponseHandler handler) {
+		Log.i(TAG, "Added Flutter handler");
 		flutterHandler = handler;
 	}
 
@@ -130,11 +132,13 @@ public class ZmqService {
 	}
 
 	public void stopSocket(){
+		Log.d(TAG, "Stopping socket...");
 		socket.close();
 		monitor.kill();
 	}
 
 	void waitForRetry(int count){
+
 		if(count > MAX_RETRY_COUNT){
 			Log.e(TAG, "Max connections retries reached, shutting down server...");
 			stopSocket();
@@ -143,7 +147,9 @@ public class ZmqService {
 
 		try{
 			//Randomized spread so that not all connection retries happen at roughly the same time
-			Thread.sleep((long) ((RETRY_INITIAL_DELAY_MS + Random.Default.nextLong(RETRY_RANDOM_RANGE_MS)) * Math.pow(2,count)));
+			long delay = (long) (((double)RETRY_INITIAL_DELAY_MS + (double)Random.Default.nextLong(RETRY_RANDOM_RANGE_MS)) * Math.pow(2,count));
+			Log.d(TAG, "Sleeping for " + delay + "ms.");
+			Thread.sleep(delay);
 		}catch(InterruptedException e){
 			Log.e(TAG, "Connection retry delay interrupted");
 		}
@@ -152,6 +158,7 @@ public class ZmqService {
 	//This could be killed when disconnected and rerun when connected to save us the polling but ¯\_(ツ)_/¯
 	private void runMainLoop(){
 		Log.i(TAG, "Running main Loop");
+		infinite:
 		while (true) {
 			if (!coordinates.isEmpty()) {
 				Log.i( TAG,"Trying to send Location...");
@@ -165,9 +172,10 @@ public class ZmqService {
 					isMessageSent = request.send(socket);
 
 					if(!isMessageSent){
+						Log.d(TAG, "Message not sent, retry nr." + sendRetries);
 						waitForRetry(sendRetries++);
 						if(sendRetries > MAX_RETRY_COUNT)
-							return;
+							break infinite;
 					}
 				}
 
@@ -175,7 +183,7 @@ public class ZmqService {
 				if (response != null) {
 					Log.i( TAG,"Coordinate sent!");
 					String type = response.removeFirst().getString(Charset.defaultCharset());
-					Log.i( TAG,"Got response" + type);
+					Log.i( TAG,"Got response " + type);
 					Coordinate.Type dangerLevel;
 					switch (type.toUpperCase()){
 						case "HIGH":
@@ -194,14 +202,16 @@ public class ZmqService {
 					retryCount = 0;
 					//we only need to notify the frontend if there is danger or traffic
 					if(dangerLevel != Coordinate.Type.SMOOTH){
+						Log.i(TAG, "Event is dangerous, notifying Flutter");
 						coordinate.setType(dangerLevel);
 						flutterHandler.messageFlutter(coordinate);
 					}
 
 				} else if (response == null) {
+					Log.d(TAG, "No response, resending, retry nr." + retryCount);
 					waitForRetry(retryCount++);
 					if(retryCount > MAX_RETRY_COUNT)
-						return;
+						break infinite;
 					continue;
 				}
 			}
@@ -215,5 +225,6 @@ public class ZmqService {
 				}
 			}
 		}
+		Log.e(TAG, "Closing mainloop");
 	}
 }
