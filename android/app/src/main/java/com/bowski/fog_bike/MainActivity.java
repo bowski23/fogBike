@@ -68,6 +68,7 @@ public class MainActivity extends FlutterActivity {
     public void runZmq(){
         ZmqService instance = ZmqService.getInstance();
         instance.setFlutterHandler(this::messageFlutter);
+        instance.setConnectionLossHandler(this::messageFlutterConnectionLoss);
         instance.startSocket();
     }
 
@@ -104,6 +105,13 @@ public class MainActivity extends FlutterActivity {
         new Handler(Looper.getMainLooper()).post(() -> {
             Log.d("JavaActivity", "messaging Flutter");
             channel.invokeMethod("onResponse", toJsonArray(coordinates));
+        });
+    }
+
+    public void messageFlutterConnectionLoss(){
+        new Handler(Looper.getMainLooper()).post(() -> {
+            Log.d("JavaActivity", "messaging Flutter about connection loss");
+            channel.invokeMethod("connectionLost","");
         });
     }
 }

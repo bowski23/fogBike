@@ -64,7 +64,7 @@ public class ZmqService {
 		coordinates.add(event);
 	}
 
-		public interface CoordinateResponseHandler {
+	public interface CoordinateResponseHandler {
 		/**
 		 * Handles the propagation of the Coordinate Response to Flutter.
 		 *
@@ -74,11 +74,25 @@ public class ZmqService {
 		void messageFlutter(@NonNull Coordinate[] coordinates);
 	}
 
+	public interface ConnectionLossHandler {
+		/**
+		 * Handles the propagation of the connection loss to Flutter.
+		 *
+		 */
+		void messageFlutterConnectionLoss();
+	}
+
 	private CoordinateResponseHandler flutterHandler;
 
 	public synchronized void setFlutterHandler(CoordinateResponseHandler handler) {
 		Log.i(TAG, "Added Flutter handler");
 		flutterHandler = handler;
+	}
+
+	private ConnectionLossHandler lossHandler;
+	public synchronized  void setConnectionLossHandler(ConnectionLossHandler lossHandler){
+		Log.i(TAG, "Added Connection Loss Handler");
+		this.lossHandler = lossHandler;
 	}
 
 	private class Monitor extends Thread {
@@ -221,5 +235,6 @@ public class ZmqService {
 			}
 		}
 		Log.e(TAG, "Closing mainloop");
+		lossHandler.messageFlutterConnectionLoss();
 	}
 }

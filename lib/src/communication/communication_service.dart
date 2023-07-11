@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as dev;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fog_bike/src/sensors/sensor_service.dart';
 import 'package:location/location.dart';
@@ -18,6 +19,8 @@ class CommunicationService {
 
   final StreamController<List<LocationEvent>> _locationEventController = StreamController<List<LocationEvent>>();
   Stream<List<LocationEvent>> get locationEvent => _locationEventController.stream;
+
+  ValueNotifier<bool> isConnectionLost = ValueNotifier<bool>(false);
 
   bool isSendingMessages = false;
 
@@ -41,6 +44,10 @@ class CommunicationService {
         }
         dev.log("dart response: $locs");
         _locationEventController.add(locs);
+        break;
+      case "connectionLost":
+        dev.log("connection lost");
+        isConnectionLost.value = true;
         break;
       default:
         dev.log("Unknown method ${call.method}");

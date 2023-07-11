@@ -26,9 +26,15 @@ class BikeMapView extends StatefulWidget {
 
 class _BikeMapViewState extends State<BikeMapView> {
   StreamSubscription<List<LocationEvent>>? _eventSubscription;
+  bool isConnectionLost = false;
 
   _BikeMapViewState(){
     _eventSubscription = CommunicationService().locationEvent.listen(_onLocationEvent);
+    CommunicationService().isConnectionLost.addListener(() { 
+      setState(() {
+        isConnectionLost = CommunicationService().isConnectionLost.value;
+      });
+    });
   }
 
   @override
@@ -104,7 +110,8 @@ class _BikeMapViewState extends State<BikeMapView> {
               _controller.complete(controller);
             },
       ),
-      const MotionIndicator()
+      const MotionIndicator(),
+      if(isConnectionLost) const AlertDialog(title: Text("Connection lost!"),content: Text("Please try again later and restart the app."),)
           ],
         );
       },) 
