@@ -148,6 +148,8 @@ public class ZmqService {
 			Log.e(TAG, "Connection retry delay interrupted");
 		}
 	}
+
+	//This could be killed when disconnected and rerun when connected to save us the polling but ¯\_(ツ)_/¯
 	private void runMainLoop(){
 		Log.i(TAG, "Running main Loop");
 		while (true) {

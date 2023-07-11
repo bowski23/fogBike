@@ -74,7 +74,7 @@ class _BikeMapViewState extends State<BikeMapView> {
           ),
         ],
       ),
-      floatingActionButton: const BikeButton(),
+      floatingActionButton: BikeButton( onPress: () => CommunicationService().isSendingMessages = !CommunicationService().isSendingMessages,),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       
       body:FutureBuilder(future: getLocation(), initialData: LocationData(latitude: 52.51,longitude: 13.377), builder:(context, loc) {

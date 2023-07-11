@@ -1,23 +1,24 @@
-
 import 'dart:math';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
-  //the thresholds represent the lower bounds for each danger category in ascending order, eg. low, mid, high
-  //these thresholds have been experimentally determined (solely in one test run), however they may differ by user and device
-  //for now these are sufficient for a proof of concept and detect bumps, sudden obstacle avoidance, as well as very sudden braking
-  //a more sophisticated approach would be suitable, but is out of scope for this project
-  //a low-pass filtered version of acceleration could determine massive prolonged acceleration/deceleration which is not detected by the thresholds
-  //these prolonged events would be a good indicator for normal braking or riding downhill. speed could also be used for this purpose  
-enum DangerLevel{
+//the thresholds represent the lower bounds for each danger category in ascending order, eg. low, mid, high
+//these thresholds have been experimentally determined (solely in one test run), however they may differ by user and device
+//for now these are sufficient for a proof of concept and detect bumps, sudden obstacle avoidance, as well as very sudden braking
+//a more sophisticated approach would be suitable, but is out of scope for this project
+//a low-pass filtered version of acceleration could determine massive prolonged acceleration/deceleration which is not detected by the thresholds
+//these prolonged events would be a good indicator for normal braking or riding downhill. speed could also be used for this purpose
+enum DangerLevel {
   none(0.0, 0.0, 0, BitmapDescriptor.hueBlue),
   low(45, 2.5, 1, BitmapDescriptor.hueYellow),
   medium(60, 3.0, 2, BitmapDescriptor.hueOrange),
-  high(75, 3.5, 3, BitmapDescriptor.hueRed);
+  high(75, 3.5, 3, BitmapDescriptor.hueRed),
+  smooth(0, 0, 4, BitmapDescriptor.hueGreen);
 
-  const DangerLevel(this.lowerBoundAcc, this.lowerBoundGyro, this.numeric, this.iconHue);
+  const DangerLevel(
+      this.lowerBoundAcc, this.lowerBoundGyro, this.numeric, this.iconHue);
 
   final double lowerBoundAcc;
   final double lowerBoundGyro;
@@ -34,6 +35,8 @@ enum DangerLevel{
         return medium;
       case 3:
         return high;
+      case 4:
+        return smooth;
       default:
         return none;
     }
@@ -63,25 +66,25 @@ enum DangerLevel{
     }
   }
 
-  static DangerLevel fromAccEvent(UserAccelerometerEvent event){
-    var abs = sqrt(pow(event.x,2) + pow(event.y,2) + pow(event.z,2));
+  static DangerLevel fromAccEvent(UserAccelerometerEvent event) {
+    var abs = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
     return fromAcc(abs);
   }
 
-  static DangerLevel fromGyroEvent(GyroscopeEvent event){
-    var abs = sqrt(pow(event.x,2) + pow(event.y,2) + pow(event.z,2));
+  static DangerLevel fromGyroEvent(GyroscopeEvent event) {
+    var abs = sqrt(pow(event.x, 2) + pow(event.y, 2) + pow(event.z, 2));
     return fromGyro(abs);
   }
 }
 
-DangerLevel max(DangerLevel? a, DangerLevel? b){
-  if(a == null || b == null) {
+DangerLevel max(DangerLevel? a, DangerLevel? b) {
+  if (a == null || b == null) {
     return a ?? b ?? DangerLevel.none;
   }
 
-  if(a.numeric > b.numeric){
+  if (a.numeric > b.numeric) {
     return a;
-  }else{
+  } else {
     return b;
   }
 }
@@ -98,7 +101,6 @@ class LocationEvent {
 
   @override
   String toString() {
-    
     return "LocationEvent: lat: $latitude, long: $longitude, level: $level";
   }
 }

@@ -56,17 +56,7 @@ public class MainActivity extends FlutterActivity {
                 int lvl = call.argument("level");
                 Log.i("JavaActivity", "onMethodCall: queueMsg: " + lat + " " + lon + " " + lvl);
                 Coordinate.Type type;
-                switch (lvl){
-                    case 1:
-                        type = Coordinate.Type.LOW;
-                    case 2:
-                        type = Coordinate.Type.MEDIUM;
-                    case 3:
-                        type = Coordinate.Type.HIGH;
-                    default:
-                        type = Coordinate.Type.SMOOTH;
-                }
-
+                type = Coordinate.Type.values()[lvl];
                 ZmqService.getInstance().addCoordinate(
                         new Coordinate(lat,lon,type));
                 break;

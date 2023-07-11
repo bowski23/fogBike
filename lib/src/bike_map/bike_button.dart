@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fog_bike/src/communication/communication_service.dart';
 
 /// A button that toggles the recording of sensor data.
 class BikeButton extends StatefulWidget {
@@ -33,7 +34,7 @@ class _BikeButtonState extends State<BikeButton> {
         widget.onLongPress?.call();
       },
       child: Icon(
-        isPlaying ? Icons.play_arrow : Icons.pause,
+        isPlaying ? Icons.pause : Icons.play_arrow,
         size: 40,
       ),
     );

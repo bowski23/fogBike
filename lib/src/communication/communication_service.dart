@@ -19,6 +19,8 @@ class CommunicationService {
   final StreamController<LocationEvent> _locationEventController = StreamController<LocationEvent>();
   Stream<LocationEvent> get locationEvent => _locationEventController.stream;
 
+  bool isSendingMessages = false;
+
   void init() async {
     dev.log("init communication service");
     platform.setMethodCallHandler(onMethodCall);
@@ -41,10 +43,12 @@ class CommunicationService {
   }
 
   void sendLocationEvent(LocationEvent event){
-    platform.invokeMethod<void>('queueMsg', <String, dynamic>{
-      'latitude':event.latitude,
-      'longitude': event.longitude,
-      'level': event.level
-    });
+    if(isSendingMessages){
+      platform.invokeMethod<void>('queueMsg', <String, dynamic>{
+        'latitude': event.latitude,
+        'longitude': event.longitude,
+        'level': event.level
+      });
+    }
   }
 }
